@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -71,7 +70,6 @@ export function SchemaGenerator() {
       schema += `model ${model.name} {\n`;
       schema += `  id Int @id @default(autoincrement())\n`;
 
-      // Add fields with necessary default values and types
       model.fields.forEach((field) => {
         schema += `  ${field.name} ${field.type}\n`;
       });
@@ -84,18 +82,17 @@ export function SchemaGenerator() {
         if (relation.fromModel === model.name) {
           const relatedModel = models.find((m) => m.name === relation.toModel);
           if (relatedModel) {
-            // Handle different types of relations (one-to-one, many-to-one, etc.)
             if (relation.type === "oneToOne") {
               schema += `  ${relatedModel.name.toLowerCase()} ${
                 relatedModel.name
-              }?\n`; // Optional relation
+              }?\n`;
             } else if (
               relation.type === "oneToMany" ||
               relation.type === "manyToMany"
             ) {
               schema += `  ${relatedModel.name.toLowerCase()}s ${
                 relatedModel.name
-              }[]\n`; // Array of related models for one-to-many/many-to-many relations
+              }[]\n`;
             }
           }
         } else if (relation.toModel === model.name) {
@@ -103,21 +100,18 @@ export function SchemaGenerator() {
             (m) => m.name === relation.fromModel
           );
           if (relatedModel) {
-            // Add the @relation directive
             schema += `  ${relatedModel.name.toLowerCase()} ${
               relatedModel.name
-            } @relation(fields: [${relatedModel.name.toLowerCase()}Id], references: [id])\n`; // Add the relation field
-            // Correctly handle the foreign key fields with @relation directive
-            schema += `  ${relatedModel.name.toLowerCase()}Id Int\n`; // Include foreign key
+            } @relation(fields: [${relatedModel.name.toLowerCase()}Id], references: [id])\n`;
+
+            schema += `  ${relatedModel.name.toLowerCase()}Id Int\n`;
           }
         }
       });
 
-      // Add createdAt and updatedAt fields
       schema += `  createdAt DateTime @default(now())\n`;
       schema += `  updatedAt DateTime @updatedAt\n`;
 
-      // Map to the correct table name in the database
       schema += `\n  @@map("${model.name.toLowerCase()}s")\n`;
       schema += "}\n\n";
     });
@@ -132,12 +126,10 @@ export function SchemaGenerator() {
       const className =
         model.name.charAt(0).toUpperCase() + model.name.slice(1);
 
-      // Static method signature
       methodsCode += `static from({\n  id,\n  ${model.fields
         .map((f) => f.name)
         .join(",\n  ")},\n`;
 
-      // Handle related models' ids
       const modelRelations = relations.filter(
         (r) => r.fromModel === model.name || r.toModel === model.name
       );
@@ -153,7 +145,7 @@ export function SchemaGenerator() {
           relation.type === "manyToOne" ||
           (relation.type === "oneToMany" && relation.toModel === model.name)
         ) {
-          methodsCode += `    ${relatedModel.toLowerCase()}Id,\n`; // For relationship IDs
+          methodsCode += `    ${relatedModel.toLowerCase()}Id,\n`;
         }
       });
 
@@ -161,10 +153,8 @@ export function SchemaGenerator() {
 
       methodsCode += `  return new ${className}({\n`;
 
-      // Directly return 'id' and 'fields'
       methodsCode += `    id: id,\n`;
       model.fields.forEach((field) => {
-        // Handle special cases like 'role' with casting or transformations if needed
         if (field.name === "role") {
           methodsCode += `    ${field.name}: ${field.name} as Role,\n`;
         } else {
@@ -172,7 +162,6 @@ export function SchemaGenerator() {
         }
       });
 
-      // Add ids for relationships (e.g., learningPathId)
       modelRelations.forEach((relation) => {
         const relatedModel =
           relation.fromModel === model.name
@@ -184,7 +173,6 @@ export function SchemaGenerator() {
           relation.type === "manyToOne" ||
           (relation.type === "oneToMany" && relation.toModel === model.name)
         ) {
-          // Insert the appropriate relationship ID (like learningPathId)
           methodsCode += `    ${relatedModel.toLowerCase()}Id: ${relatedModel.toLowerCase()}Id,\n`;
         }
       });
