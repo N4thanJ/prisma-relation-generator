@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { dark, docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type Model = {
@@ -116,6 +115,12 @@ export function SchemaGenerator() {
               schema += `  ${relatedModel.name.toLowerCase()}s ${
                 relatedModel.name
               }[]\n`;
+            } else if (relation.type === "oneToOne") {
+              schema += `  ${relatedModel.name.toLowerCase()} ${
+                relatedModel.name
+              }?\n`;
+
+              schema += `  ${relatedModel.name.toLowerCase()}Id Int?\n`;
             } else {
               schema += `  ${relatedModel.name.toLowerCase()} ${
                 relatedModel.name
@@ -316,6 +321,7 @@ export function SchemaGenerator() {
                   <SelectContent>
                     <SelectItem value="String">String</SelectItem>
                     <SelectItem value="Int">Int</SelectItem>
+                    <SelectItem value="Float">Float</SelectItem>
                     <SelectItem value="Boolean">Boolean</SelectItem>
                     <SelectItem value="DateTime">DateTime</SelectItem>
                   </SelectContent>
