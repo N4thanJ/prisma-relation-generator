@@ -37,6 +37,7 @@ export function SchemaGenerator() {
   const [relations, setRelations] = useState<Relation[]>([]);
   const [generatedSchema, setGeneratedSchema] = useState("");
   const [generatedModels, setGeneratedModels] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddField = () => {
     setCurrentModel({
@@ -252,6 +253,22 @@ export function SchemaGenerator() {
     const newRelations = [...relations];
     newRelations.splice(relationIndex, 1);
     setRelations(newRelations);
+  };
+
+  const handleCopyGeneratedSchema = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      navigator.clipboard.writeText(generatedSchema);
+      setIsLoading(false);
+    }, 500);
+  };
+
+  const handleCopyGeneratedModels = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      navigator.clipboard.writeText(generatedModels);
+      setIsLoading(false);
+    }, 500);
   };
 
   return (
@@ -472,22 +489,40 @@ export function SchemaGenerator() {
           <TabsTrigger value="models">TypeScript Models</TabsTrigger>
         </TabsList>
         <TabsContent value="schema">
-          <SyntaxHighlighter
-            language="prisma"
-            style={materialDark}
-            className="h-[400px] p-4 rounded-md bg-gray-900 text-white overflow-auto"
-          >
-            {generatedSchema}
-          </SyntaxHighlighter>
+          <div className="relative">
+            <SyntaxHighlighter
+              language="prisma"
+              style={materialDark}
+              className="h-[400px] p-4 rounded-md bg-gray-900 text-white overflow-auto"
+            >
+              {generatedSchema}
+            </SyntaxHighlighter>
+            <Button
+              className="absolute top-2 right-2"
+              onClick={() => handleCopyGeneratedSchema()}
+              disabled={isLoading}
+            >
+              Copy
+            </Button>
+          </div>
         </TabsContent>
         <TabsContent value="models">
-          <SyntaxHighlighter
-            language="typescript"
-            style={materialDark}
-            className="h-[400px] p-4 rounded-md bg-gray-900 text-white overflow-auto"
-          >
-            {generatedModels}
-          </SyntaxHighlighter>
+          <div className="relative">
+            <SyntaxHighlighter
+              language="typescript"
+              style={materialDark}
+              className="h-[400px] p-4 rounded-md bg-gray-900 text-white overflow-auto"
+            >
+              {generatedModels}
+            </SyntaxHighlighter>
+            <Button
+              className="absolute top-2 right-2"
+              onClick={() => handleCopyGeneratedModels()}
+              disabled={isLoading}
+            >
+              Copy
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
