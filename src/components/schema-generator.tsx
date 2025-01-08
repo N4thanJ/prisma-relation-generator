@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { dark, docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import { materialDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type Model = {
   name: string;
@@ -436,6 +438,7 @@ export function SchemaGenerator() {
         <TabsContent value="schema">
           <SyntaxHighlighter
             language="prisma"
+            style={materialDark}
             className="h-[400px] p-4 rounded-md bg-gray-900 text-white overflow-auto"
           >
             {generatedSchema}
@@ -444,6 +447,7 @@ export function SchemaGenerator() {
         <TabsContent value="models">
           <SyntaxHighlighter
             language="typescript"
+            style={materialDark}
             className="h-[400px] p-4 rounded-md bg-gray-900 text-white overflow-auto"
           >
             {generatedModels}
