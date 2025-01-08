@@ -25,7 +25,7 @@ export default function RootLayout({
           <main className="flex-grow container my-8">{children}</main>
           <footer className="bg-secondary py-4">
             <div className="container text-center text-secondary-foreground">
-              © 2023 Prisma Schema Generator
+              © 2025 Prisma Schema Generator
             </div>
           </footer>
         </div>
