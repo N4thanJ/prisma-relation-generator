@@ -68,6 +68,15 @@ export function SchemaGenerator() {
   const generatePrismaSchema = () => {
     let schema = "";
 
+    schema += "generator client {\n";
+    schema += '  provider = "prisma-client-js"\n';
+    schema += "}\n\n";
+
+    schema += "datasource db {\n";
+    schema += `  provider = "postgresql"\n`;
+    schema += `  url      = env("DATABASE_URL")\n`;
+    schema += "}\n\n";
+
     models.forEach((model) => {
       schema += `model ${model.name} {\n`;
       schema += `  id Int @id @default(autoincrement())\n`;
@@ -102,11 +111,17 @@ export function SchemaGenerator() {
             (m) => m.name === relation.fromModel
           );
           if (relatedModel) {
-            schema += `  ${relatedModel.name.toLowerCase()} ${
-              relatedModel.name
-            } @relation(fields: [${relatedModel.name.toLowerCase()}Id], references: [id])\n`;
+            if (relation.type === "manyToMany") {
+              schema += `  ${relatedModel.name.toLowerCase()}s ${
+                relatedModel.name
+              }[]\n`;
+            } else {
+              schema += `  ${relatedModel.name.toLowerCase()} ${
+                relatedModel.name
+              } @relation(fields: [${relatedModel.name.toLowerCase()}Id], references: [id])\n`;
 
-            schema += `  ${relatedModel.name.toLowerCase()}Id Int\n`;
+              schema += `  ${relatedModel.name.toLowerCase()}Id Int\n`;
+            }
           }
         }
       });
@@ -136,6 +151,8 @@ export function SchemaGenerator() {
         (r) => r.fromModel === model.name || r.toModel === model.name
       );
 
+      let hasManyToManyReferencedSide = false;
+
       modelRelations.forEach((relation) => {
         const relatedModel =
           relation.fromModel === model.name
@@ -147,21 +164,33 @@ export function SchemaGenerator() {
           relation.type === "manyToOne" ||
           (relation.type === "oneToMany" && relation.toModel === model.name)
         ) {
-          methodsCode += `    ${relatedModel.toLowerCase()}Id,\n`;
+          methodsCode += `  ${relatedModel.toLowerCase()}Id,\n`;
+        }
+
+        if (relation.type === "manyToMany") {
+          const isReferencedSide = relation.toModel === model.name;
+          if (isReferencedSide) {
+            methodsCode += `  ${relatedModel.toLowerCase()}s,\n`;
+            hasManyToManyReferencedSide = true;
+          }
         }
       });
 
-      methodsCode += `}: ${className}Prisma) {\n`;
+      // Close the parameter signature
+      if (hasManyToManyReferencedSide) {
+        methodsCode += `}: ${className}Prisma & { ${modelRelations
+          .filter((r) => r.type === "manyToMany" && r.toModel === model.name)
+          .map((r) => `${r.fromModel.toLowerCase()}s: ${r.fromModel}Prisma[]`)
+          .join("; ")} }) {\n`;
+      } else {
+        methodsCode += `}: ${className}Prisma) {\n`;
+      }
 
       methodsCode += `  return new ${className}({\n`;
 
       methodsCode += `    id: id,\n`;
       model.fields.forEach((field) => {
-        if (field.name === "role") {
-          methodsCode += `    ${field.name}: ${field.name} as Role,\n`;
-        } else {
-          methodsCode += `    ${field.name}: ${field.name},\n`;
-        }
+        methodsCode += `    ${field.name}: ${field.name},\n`;
       });
 
       modelRelations.forEach((relation) => {
@@ -176,6 +205,13 @@ export function SchemaGenerator() {
           (relation.type === "oneToMany" && relation.toModel === model.name)
         ) {
           methodsCode += `    ${relatedModel.toLowerCase()}Id: ${relatedModel.toLowerCase()}Id,\n`;
+        }
+
+        if (relation.type === "manyToMany") {
+          const isReferencedSide = relation.toModel === model.name;
+          if (isReferencedSide) {
+            methodsCode += `    ${relatedModel.toLowerCase()}s: ${relatedModel.toLowerCase()}s.map((${relatedModel.toLowerCase()}) => ${relatedModel}.from(${relatedModel.toLowerCase()})),\n`;
+          }
         }
       });
 
