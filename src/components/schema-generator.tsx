@@ -165,20 +165,23 @@ export function SchemaGenerator() {
             ? relation.toModel
             : relation.fromModel;
 
-        if (
-          relation.type === "oneToOne" ||
+        const isReferencedSide = relation.toModel === model.name;
+
+        if (relation.type === "oneToOne") {
+          // Only include for owner side (fromModel)
+          if (!isReferencedSide) {
+            methodsCode += `  ${relatedModel.toLowerCase()},\n`;
+          }
+        } else if (
           relation.type === "manyToOne" ||
-          (relation.type === "oneToMany" && relation.toModel === model.name)
+          (relation.type === "oneToMany" && isReferencedSide)
         ) {
           methodsCode += `  ${relatedModel.toLowerCase()}Id,\n`;
         }
 
-        if (relation.type === "manyToMany") {
-          const isReferencedSide = relation.toModel === model.name;
-          if (isReferencedSide) {
-            methodsCode += `  ${relatedModel.toLowerCase()}s,\n`;
-            hasManyToManyReferencedSide = true;
-          }
+        if (relation.type === "manyToMany" && isReferencedSide) {
+          methodsCode += `  ${relatedModel.toLowerCase()}s,\n`;
+          hasManyToManyReferencedSide = true;
         }
       });
 
@@ -205,19 +208,21 @@ export function SchemaGenerator() {
             ? relation.toModel
             : relation.fromModel;
 
-        if (
-          relation.type === "oneToOne" ||
+        const isReferencedSide = relation.toModel === model.name;
+
+        if (relation.type === "oneToOne") {
+          if (!isReferencedSide) {
+            methodsCode += `    ${relatedModel.toLowerCase()}: ${relatedModel.toLowerCase()} ? ${relatedModel}.from(${relatedModel.toLowerCase()}) : undefined,\n`;
+          }
+        } else if (
           relation.type === "manyToOne" ||
-          (relation.type === "oneToMany" && relation.toModel === model.name)
+          (relation.type === "oneToMany" && isReferencedSide)
         ) {
           methodsCode += `    ${relatedModel.toLowerCase()}Id: ${relatedModel.toLowerCase()}Id,\n`;
         }
 
-        if (relation.type === "manyToMany") {
-          const isReferencedSide = relation.toModel === model.name;
-          if (isReferencedSide) {
-            methodsCode += `    ${relatedModel.toLowerCase()}s: ${relatedModel.toLowerCase()}s.map((${relatedModel.toLowerCase()}) => ${relatedModel}.from(${relatedModel.toLowerCase()})),\n`;
-          }
+        if (relation.type === "manyToMany" && isReferencedSide) {
+          methodsCode += `    ${relatedModel.toLowerCase()}s: ${relatedModel.toLowerCase()}s.map((${relatedModel.toLowerCase()}) => ${relatedModel}.from(${relatedModel.toLowerCase()})),\n`;
         }
       });
 
